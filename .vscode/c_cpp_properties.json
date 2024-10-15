@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/Cellar/glfw/3.4/include"
+            ]
+        }
+    ],
+    "version": 4
+}

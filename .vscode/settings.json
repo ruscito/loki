@@ -1,7 +1,7 @@
 {
     "files.exclude": {
         "extern": false,
-        "obj": true
+        "obj": false
     },
 
     "todo-tree.filtering.excludeGlobs": [
@@ -29,9 +29,11 @@
         "type_traits": "c",
         "atomic": "c",
         "cstdint": "c",
-        "loki.h": "c"
+        "loki.h": "c",
+        "lk_math.h": "c"
     },
     "cSpell.words": [
+        "cosa",
         "fullscreen",
         "GLADloadproc",
         "GLFW_*",
@@ -40,16 +42,21 @@
         "HIGHDPI",
         "Löwy",
         "Perlin",
+        "SHEDERS",
+        "sina",
+        "Voxel",
         "Wkeyfun"
     ],
     // "workbench.panel.defaultLocation": "right",
     // "workbench.sideBar.location": "right",
     "workbench.colorCustomizations": {
-        "panel.background": "#303841",
-        "sideBar.background": "#303841",
-        "sideBar.border": "#454F5A",
-        "sideBarSectionHeader.background": "#4F565E",
-        "terminal.background": "#303841"
+        // "panel.background": "#303841",
+        // "sideBar.background": "#303841",
+        // "sideBar.border": "#454F5A",
+        // "sideBarSectionHeader.background": "#4F565E",
+        // "terminal.background": "#303841",
+        // "editor.background":  "#303841",
+        // "editorGutter.background":  "#303841",
     },
     "Workbench.fontFamily": "Monoid",
     "cSpell.ignoreWords": [

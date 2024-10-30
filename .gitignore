@@ -54,6 +54,7 @@ dkms.conf
 # Folders
 bin/
 obj/
+swap/
 
 # OS Specific
 .DS_Store

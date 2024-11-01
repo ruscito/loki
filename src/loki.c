@@ -164,9 +164,12 @@ int main()
     };
 
     // Rotate the cube 90deg on Z and reduce the size
-    mat4 model = GLM_MAT4_IDENTITY;
-    mat4 view  = GLM_MAT4_IDENTITY;
-    mat4 projection = GLM_MAT4_IDENTITY;
+    mat4 model;
+    mat4 view;
+    mat4 projection;
+    glm_mat4_identity(model);
+    glm_mat4_identity(view);
+    glm_mat4_identity(projection);
 
     glm_rotate(model, glm_rad(-55.0), (vec3){1.0f, 0.0f, 0.0f});
     glm_translate(view, (vec3){0.0f, 0.0f, -3.0});

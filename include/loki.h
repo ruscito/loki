@@ -10,8 +10,9 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <errno.h>
+#define CGLM_ALL_UNALIGNED
 #include <cglm/cglm.h>
-
+#include <cglm/struct.h>
 
 #define PI 3.14159265359f
 #define DEG2RAD(X) ((X) * (PI / 180.0f))

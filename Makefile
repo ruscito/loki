@@ -1,18 +1,34 @@
-# flags=-O2 -Wall -Wextra -std=c2x
-# ldflags=-lGL -ldl -lglfw
-
-
-CC = clang
-CFLAGS =  -g -Wall -Wextra -std=c11 -Iinclude -I/usr/local/include -I./extern/cglm/include -I./extern
-LDFLAGS = -L/usr/local/lib -lglfw -framework OpenGL
+# Detect OS
+ifeq ($(OS),Windows_NT)
+    # MSYS2 Windows settings
+    CC = gcc
+    CFLAGS = -g -Wall -Wextra -std=c11 \
+             -Iinclude \
+             -I./extern/cglm/include \
+             -I./extern \
+             -I/mingw64/include
+    LDFLAGS = $(shell pkg-config --libs glfw3) -lopengl32 -lgdi32
+    TARGET = $(BIN_DIR)/loki.exe
+else
+    # macOS settings
+    CC = clang
+    CFLAGS = -g -Wall -Wextra -std=c11 \
+             -Iinclude \
+             -I./extern/cglm/include \
+             -I./extern \
+             -I/usr/local/include
+    LDFLAGS = -L/usr/local/lib -lglfw -framework OpenGL
+    TARGET = $(BIN_DIR)/loki
+endif
 
 # Directories
 SRC_DIR = src
 OBJ_DIR = obj
+OBJT_DIR = obj/tools
 BIN_DIR = bin
 
 # Create directories if they don't exist
-$(shell mkdir -p $(OBJ_DIR) $(BIN_DIR))
+$(shell mkdir -p $(OBJ_DIR) $(OBJT_DIR) $(BIN_DIR))
 
 # Automatically find all C source files, including those in subdirectories
 SRCS = $(shell find $(SRC_DIR) -name '*.c') # extern/cglm/src/*.c
@@ -37,9 +53,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 
 # Clean target
 clean:
-	cd $(OBJ_DIR) && rm -rf *.o  
-	cd $(OBJ_DIR)/tools && rm -rf *.o 
-	cd $(BIN_DIR) && rm -rf loki
+	rm -rf $(OBJ_DIR)/*.o $(OBJT_DIR)/*.o $(TARGET)
 
 run:
-	./bin/loki
+	./$(TARGET)

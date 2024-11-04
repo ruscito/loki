@@ -55,8 +55,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(OBJT_DIR)/*.o $(TARGET)
 
+# Just run
 run:
 	./$(TARGET)
 
 # Build and run without cleaning
 build-run: $(TARGET) run
+
+# Copy resource
+copy-res:
+	rm -rf ./bin/res
+	cp -r ./res ./bin/res

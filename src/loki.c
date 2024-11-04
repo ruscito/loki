@@ -186,7 +186,6 @@ int main()
     glm_mat4_identity(projection);
 
     glm_rotate(model, glm_rad(-55.0), (vec3){1.0f, 0.0f, 0.0f});
-    // glm_translate(view, (vec3){0.0f, 0.0f, -3.0});
     glm_perspective(glm_rad(45.0), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, projection);
 
     // Use our shader program
@@ -211,6 +210,7 @@ int main()
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_BACK);
     // glFrontFace(GL_CCW);
+    glEnable(GL_DEPTH_TEST);
 
     // Generate texture
     unsigned int texture = generate_texture("./res//container.jpg");

@@ -56,6 +56,8 @@ void set_camera_position(Camera *camera, vec3 position)
 
 void update_camera(Camera *camera, GLFWwindow *w)
 {
+    vec3 front;
+    
     // keyboard management
     if (glfwGetKey(w, GLFW_KEY_W) == GLFW_PRESS) {
         camera->position[0] += camera->speed * camera->front[0];
@@ -84,42 +86,39 @@ void update_camera(Camera *camera, GLFWwindow *w)
         camera->position[2] += camera->speed * right[2]; 
     }
     
-    // // Mouse management
-    // double x_position, y_position;
-    // glfwGetCursorPos(w, &x_position, &y_position);
-    // if (camera->ons) {
-    //     camera->last_mouse_x = (float) x_position;
-    //     camera->last_mouse_y = (float) y_position;
-    //     camera->ons = false;
-    // }
+    // Mouse management
+    double x_position, y_position;
+    glfwGetCursorPos(w, &x_position, &y_position);
+    if (camera->ons) {
+        camera->last_mouse_x = (float) x_position;
+        camera->last_mouse_y = (float) y_position;
+        camera->ons = false;
+    }
 
-    // if (camera->last_mouse_x != (float) x_position  && camera->last_mouse_y != (float) y_position) {
-    //     float mouse_x_offset = (float) x_position - camera->last_mouse_x;
-    //     float mouse_y_offset = camera->last_mouse_y - (float) y_position;
-    //     camera->last_mouse_x = (float) x_position;
-    //     camera->last_mouse_y = (float) y_position;
+    if ( camera->last_mouse_x != x_position || camera->last_mouse_y != y_position  ) {
+        float mouse_x_offset = (float) x_position - camera->last_mouse_x;
+        float mouse_y_offset = camera->last_mouse_y - (float) y_position;
+        camera->last_mouse_x = (float) x_position;
+        camera->last_mouse_y = (float) y_position;
 
 
-    //     mouse_x_offset *= camera->sensitivity;
-    //     mouse_y_offset *= camera->sensitivity;
+        mouse_x_offset *= camera->sensitivity;
+        mouse_y_offset *= camera->sensitivity;
 
-    //     camera->yaw += mouse_x_offset;
-    //     camera->pitch += mouse_y_offset;
+        camera->yaw += mouse_x_offset;
+        camera->pitch += mouse_y_offset;
 
-    //     if ( camera->pitch > MAX_PITCH ) camera->pitch = MAX_PITCH;
-    //     if ( camera->pitch < MAX_PITCH ) camera->pitch = -MAX_PITCH;
+        if ( camera->pitch > MAX_PITCH ) camera->pitch = MAX_PITCH;
+        if ( camera->pitch < MAX_PITCH ) camera->pitch = -MAX_PITCH;
 
-    //     vec3 front;
+        camera->front[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
+        camera->front[1] = sin(glm_rad(camera->pitch));
+        camera->front[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
+        glm_normalize(camera->front);
+    }
 
-    //     front[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-    //     front[1] = sin(glm_rad(camera->pitch));
-    //     front[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-    //     glm_normalize(front);
-        
-    //     glm_vec3_add(camera->position, front, camera->front);
-    //     DEBUG("IN\n");
-    // }
 
-    // glm_vec3_add(camera->position, camera->front, camera->front);
-    glm_lookat(camera->position, camera->front, CAMERA_UP, camera->view);
+
+    glm_vec3_add(camera->position, camera->front, front);
+    glm_lookat(camera->position, front, CAMERA_UP, camera->view);
 }

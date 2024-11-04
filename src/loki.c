@@ -1,11 +1,12 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include "loki.h"
 #include "camera.h"
 #include "tools/log.h"
 #include "tools/res.h"
 #include "shaders.h"
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -44,6 +45,20 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
+void process_input(GLFWwindow *window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);   
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and 
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
+}
+
 int main() 
 {
     // Initialize GLFW
@@ -71,6 +86,7 @@ int main()
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -158,41 +174,43 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // Camera
-    if ( (camera = create_camera()) == NULL) {
+    if ( (camera = create_camera(NULL)) == NULL) {
         FATAL("Failed to create the default camera");
         goto CLEAN_UP;
     };
 
     // Rotate the cube 90deg on Z and reduce the size
     mat4 model;
-    mat4 view;
     mat4 projection;
     glm_mat4_identity(model);
-    glm_mat4_identity(view);
     glm_mat4_identity(projection);
 
     glm_rotate(model, glm_rad(-55.0), (vec3){1.0f, 0.0f, 0.0f});
-    glm_translate(view, (vec3){0.0f, 0.0f, -3.0});
+    // glm_translate(view, (vec3){0.0f, 0.0f, -3.0});
     glm_perspective(glm_rad(45.0), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, projection);
-
-
 
     // Use our shader program
     glUseProgram(shader_program);
+
+    // send model matrix
     unsigned int model_loc = glGetUniformLocation(shader_program, "model");
     DEBUG("Model location  = %d\n", model_loc);
     glUniformMatrix4fv(model_loc, 1, GL_FALSE, model[0]);
+
+    // send view matrix
     unsigned int view_loc = glGetUniformLocation(shader_program, "view");
     DEBUG("View location  = %d\n", view_loc);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, view[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, camera->view[0]);
+
+    // send projection matrix
     unsigned int projection_loc = glGetUniformLocation(shader_program, "projection");
     DEBUG("Projection location  = %d\n", projection_loc);
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection[0]);
 
     // Set back-face culling
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    // glFrontFace(GL_CCW);
 
     // Generate texture
     unsigned int texture = generate_texture("./res//container.jpg");
@@ -201,13 +219,18 @@ int main()
         goto CLEAN_UP;
     }
 
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        process_input(window);
+
         // Clear the color buffer and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Use our shader program
         glUseProgram(shader_program);
+        update_camera(camera, window);
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, camera->view[0]);
 
         // Bind texture
         glBindTexture(GL_TEXTURE_2D, texture);

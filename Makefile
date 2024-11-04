@@ -57,3 +57,6 @@ clean:
 
 run:
 	./$(TARGET)
+
+# Build and run without cleaning
+build-run: $(TARGET) run

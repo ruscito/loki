@@ -16,6 +16,7 @@
 
 #define PI 3.14159265359f
 #define DEG2RAD(X) ((X) * (PI / 180.0f))
+#define GL_SILENCE_DEPRECATION
 
 typedef enum {
     AIR = 0,

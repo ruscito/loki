@@ -15,7 +15,7 @@
         {
             "label": "Run",
             "type": "shell",
-            "command": "make run",
+            "command": "make build-run",
             "group": {
                 "kind": "test",
                 "isDefault": true

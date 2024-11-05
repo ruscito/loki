@@ -7,20 +7,20 @@
 
 
 // Default initial setup
-#define CAMERA_POSITION (vec3){0.0f, 0.0f, 3.0f}
-#define CAMERA_FRONT    (vec3){0.0f, 0.0f,-1.0f}
-#define CAMERA_UP       (vec3){0.0f, 1.0f, 0.0f}
-#define CAMERA_RIGHT    (vec3){1.0f, 0.0f, 0.0f}
+#define CAMERA_POSITION     (vec3){0.0f, 0.0f, 3.0f}
+#define CAMERA_FRONT        (vec3){0.0f, 0.0f,-1.0f}
+#define CAMERA_UP           (vec3){0.0f, 1.0f, 0.0f}
+#define CAMERA_RIGHT        (vec3){1.0f, 0.0f, 0.0f}
     
 // Default angles
-#define CAMERA_YAW  -90.0f;   // Looking forward
-#define CAMERA_PITCH  0.0f;
+#define CAMERA_YAW          -90.0f;   // Looking forward
+#define CAMERA_PITCH        0.0f;
     
 // Default parameters
 #define CAMERA_SPEED        0.05f;
 #define CAMERA_SENSITIVITY  0.1f;
-#define CAMERA_FOV         70.0f;
-#define CAMERA_HEIGHT       1.7f;  // Typical FPS eye height
+#define CAMERA_FOV          45.0f; //70.0f;
+#define CAMERA_HEIGHT       1.8f;  //1.7f;  // Typical FPS eye height
 
 
 

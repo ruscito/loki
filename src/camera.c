@@ -36,7 +36,10 @@ Camera *create_camera(vec3 position)
     c->is_jumping = false;
     c->jump_velocity = 0.0f;
     glm_mat4_identity(c->view);
-    glm_lookat(c->position, CAMERA_FRONT, CAMERA_UP, c->view);
+    vec3 target;
+    glm_vec3_add(c->position, c->front, target);
+    glm_lookat(c->position, target, c->up, c->view);
+
     c->ons = true;
     return c;
 }
@@ -55,70 +58,64 @@ void set_camera_position(Camera *camera, vec3 position)
 
 
 void update_camera(Camera *camera, GLFWwindow *w)
-{
-    vec3 front;
-    
-    // keyboard management
+{   
+    // Keyboard management
     if (glfwGetKey(w, GLFW_KEY_W) == GLFW_PRESS) {
-        camera->position[0] += camera->speed * camera->front[0];
-        camera->position[1] += camera->speed * camera->front[1];
-        camera->position[2] += camera->speed * camera->front[2];
+        vec3 move;
+        glm_vec3_scale(camera->front, camera->speed, move);
+        glm_vec3_add(camera->position, move, camera->position);
     }
     if (glfwGetKey(w, GLFW_KEY_S) == GLFW_PRESS) {
-        camera->position[0] -= camera->speed * camera->front[0];
-        camera->position[1] -= camera->speed * camera->front[1];
-        camera->position[2] -= camera->speed * camera->front[2];
+        vec3 move;
+        glm_vec3_scale(camera->front, camera->speed, move);
+        glm_vec3_sub(camera->position, move, camera->position);
     }
     if (glfwGetKey(w, GLFW_KEY_A) == GLFW_PRESS) {
-        vec3 right;
+        vec3 right, move;
         glm_cross(camera->front, camera->up, right);
         glm_normalize(right);
-        camera->position[0] -= camera->speed * right[0]; 
-        camera->position[1] -= camera->speed * right[1]; 
-        camera->position[2] -= camera->speed * right[2]; 
+        glm_vec3_scale(right, camera->speed, move);
+        glm_vec3_sub(camera->position, move, camera->position);
     }
     if (glfwGetKey(w, GLFW_KEY_D) == GLFW_PRESS) {
-        vec3 right;
+        vec3 right, move;
         glm_cross(camera->front, camera->up, right);
         glm_normalize(right);
-        camera->position[0] += camera->speed * right[0]; 
-        camera->position[1] += camera->speed * right[1]; 
-        camera->position[2] += camera->speed * right[2]; 
+        glm_vec3_scale(right, camera->speed, move);
+        glm_vec3_add(camera->position, move, camera->position);
     }
     
     // Mouse management
     double x_position, y_position;
     glfwGetCursorPos(w, &x_position, &y_position);
+    
     if (camera->ons) {
-        camera->last_mouse_x = (float) x_position;
-        camera->last_mouse_y = (float) y_position;
+        camera->last_mouse_x = (float)x_position;
+        camera->last_mouse_y = (float)y_position;
         camera->ons = false;
+        return;
     }
 
-    if ( camera->last_mouse_x != x_position || camera->last_mouse_y != y_position  ) {
-        float mouse_x_offset = (float) x_position - camera->last_mouse_x;
-        float mouse_y_offset = camera->last_mouse_y - (float) y_position;
-        camera->last_mouse_x = (float) x_position;
-        camera->last_mouse_y = (float) y_position;
+    float x_offset = ((float)x_position - camera->last_mouse_x) * camera->sensitivity;
+    float y_offset = (camera->last_mouse_y - (float)y_position) * camera->sensitivity;
+    camera->last_mouse_x = (float)x_position;
+    camera->last_mouse_y = (float)y_position;
 
+    camera->yaw += x_offset;
+    camera->pitch += y_offset;
 
-        mouse_x_offset *= camera->sensitivity;
-        mouse_y_offset *= camera->sensitivity;
+    // Constrain pitch
+    if (camera->pitch > 89.0f) camera->pitch = 89.0f;
+    if (camera->pitch < -89.0f) camera->pitch = -89.0f;
 
-        camera->yaw += mouse_x_offset;
-        camera->pitch += mouse_y_offset;
+    // Calculate the new front vector
+    camera->front[0] = cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
+    camera->front[1] = sinf(glm_rad(camera->pitch));
+    camera->front[2] = sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
+    glm_normalize(camera->front);
 
-        if ( camera->pitch > MAX_PITCH ) camera->pitch = MAX_PITCH;
-        if ( camera->pitch < MAX_PITCH ) camera->pitch = -MAX_PITCH;
-
-        camera->front[0] = cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-        camera->front[1] = sin(glm_rad(camera->pitch));
-        camera->front[2] = sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch));
-        glm_normalize(camera->front);
-    }
-
-
-
-    glm_vec3_add(camera->position, camera->front, front);
-    glm_lookat(camera->position, front, CAMERA_UP, camera->view);
+    // Calculate matrix view
+    vec3 target;
+    glm_vec3_add(camera->position, camera->front, target);
+    glm_lookat(camera->position, target, camera->up, camera->view);
 }

@@ -45,13 +45,33 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
-void process_input(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);   
+// Add this to your window state or global variables
+bool mouse_captured = false;
+
+// Add this mouse button callback function
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) 
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            // Capture mouse when clicking in window
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            mouse_captured = true;
+        }
+    }
+}
+
+// Add key callback to allow escaping from mouse capture
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) 
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        // Release mouse capture when pressing ESC
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetWindowShouldClose(window, true);  
+        mouse_captured = false;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
@@ -87,6 +107,13 @@ int main()
     // Make the window's context current
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    // Set the callbacks
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetKeyCallback(window, key_callback);
+    
+    // Start with normal cursor
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -186,7 +213,7 @@ int main()
     glm_mat4_identity(projection);
 
     glm_rotate(model, glm_rad(-55.0), (vec3){1.0f, 0.0f, 0.0f});
-    glm_perspective(glm_rad(45.0), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, projection);
+    glm_perspective(glm_rad(camera->fov), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, projection);
 
     // Use our shader program
     glUseProgram(shader_program);
@@ -222,7 +249,6 @@ int main()
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
-        process_input(window);
 
         // Clear the color buffer and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

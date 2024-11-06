@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 
 #include "loki.h"
-#include "camera.h"
 #include "tools/log.h"
 #include "tools/res.h"
 #include "shaders.h"
@@ -42,14 +41,19 @@ const char* fragment_shader_src = "#version 330 core\n"
     "   FragColor = texture(Texture, TexCoord);\n"
     "}\n\0";
 
-Camera *camera = NULL;
-
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+void cursor_position_callback(GLFWwindow* window, double x_position, double y_position)
+{
+    if (engine.is_mouse_captured) {
+        engine.mouse.x = x_position;
+        engine.mouse.y = y_position;
+    }
+}
 
-// Add this mouse button callback function
+// Mouse button callback function
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) 
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -57,11 +61,26 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             // Capture mouse when clicking in window
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             engine.is_mouse_captured = true;
+            if (engine.camera->ons) {
+                glfwSetCursorPos(window, 0.0f, 0.0f);
+                engine.camera->ons = false;
+                return;
+            }
         }
     }
 }
 
-// Add key callback to allow escaping from mouse capture
+// Mouse scroll callback
+void mouse_scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
+{
+    if (engine.is_mouse_captured) {
+        engine.mouse.scroll_x = x_offset;
+        engine.mouse.scroll_y = y_offset;
+        engine.camera->update_zoom = true;
+    }   
+}
+
+// Key callback to allow escaping from mouse capture
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -82,10 +101,22 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 int main() 
 {
-    // Initialize GLFW
+    // initialize engine state
     log_init();
     engine.is_mouse_captured = false;
+    engine.mouse.x = 0.0f ;
+    engine.mouse.y = 0.0f ;
+    engine.mouse.scroll_x = 0.0f ;
+    engine.mouse.scroll_y = 0.0f ;
+    engine.screen_height = SCR_HEIGHT;
+    engine.screen_width = SCR_WIDTH;
+    // Camera
+    if ( (engine.camera = create_camera(NULL)) == NULL) {
+        FATAL("Failed to create the default camera");
+        return 0;
+    };
 
+    // Initialize GLFW
     if (!glfwInit()) {
         FATAL("Failed to initialize GLFW\n");
         return -1;
@@ -110,9 +141,11 @@ int main()
     // Make the window's context current
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     // Set the callbacks
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+
+    glfwSetScrollCallback(window, mouse_scroll_callback);
     glfwSetKeyCallback(window, key_callback);
     
     // Start with normal cursor
@@ -203,20 +236,12 @@ int main()
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
 
-    // Camera
-    if ( (camera = create_camera(NULL)) == NULL) {
-        FATAL("Failed to create the default camera");
-        goto CLEAN_UP;
-    };
-
     // Rotate the cube 90deg on Z and reduce the size
     mat4 model;
-    mat4 projection;
     glm_mat4_identity(model);
-    glm_mat4_identity(projection);
 
     glm_rotate(model, glm_rad(-55.0), (vec3){1.0f, 0.0f, 0.0f});
-    glm_perspective(glm_rad(camera->fov), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, projection);
+    glm_perspective(glm_rad(engine.camera->fov), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, engine.camera->projection);
 
     // Use our shader program
     glUseProgram(shader_program);
@@ -229,12 +254,12 @@ int main()
     // send view matrix
     unsigned int view_loc = glGetUniformLocation(shader_program, "view");
     DEBUG("View location  = %d\n", view_loc);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, camera->view[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, engine.camera->view[0]);
 
     // send projection matrix
     unsigned int projection_loc = glGetUniformLocation(shader_program, "projection");
     DEBUG("Projection location  = %d\n", projection_loc);
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection[0]);
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, engine.camera->projection[0]);
 
     // Set back-face culling
     // glEnable(GL_CULL_FACE);
@@ -258,8 +283,13 @@ int main()
 
         // Use our shader program
         glUseProgram(shader_program);
-        update_camera(camera, window);
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, camera->view[0]);
+        update_camera(engine.camera , window);
+        if (engine.update_prospective) {
+            glUniformMatrix4fv(projection_loc, 1, GL_FALSE, engine.camera->projection[0]);
+            engine.update_prospective = false;
+            DEBUG("Updated prospective\n");
+        }
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, engine.camera->view[0]);
 
         // Bind texture
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -274,7 +304,7 @@ int main()
         // Poll for and process events
         glfwPollEvents();
     }
-    free(camera);
+    free(engine.camera);
 
     // Clean up
 CLEAN_UP:

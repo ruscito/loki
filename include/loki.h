@@ -14,6 +14,8 @@
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 
+#include "camera.h"
+
 #define PI 3.14159265359f
 #define DEG2RAD(X) ((X) * (PI / 180.0f))
 #define GL_SILENCE_DEPRECATION
@@ -28,12 +30,17 @@ typedef enum {
     MAX_VOXEL,
 } VoxelType;
 
-
-
 typedef struct {
     vec3 position;
     VoxelType type;
 } Voxel;
+
+typedef struct {
+    float x;
+    float y;
+    float scroll_x;
+    float scroll_y;
+} Mouse;
 
 
 typedef struct {
@@ -47,6 +54,11 @@ typedef struct {
 
 typedef struct {
     bool is_mouse_captured;
+    Mouse mouse;
+    Camera *camera;
+    bool update_prospective;
+    float screen_width;
+    float screen_height;
 } EngineState;
 
 

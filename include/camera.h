@@ -53,6 +53,7 @@ typedef struct {
     mat4 view;
     mat4 projection;
     bool ons;
+    bool update_zoom;
 } Camera;
 
 Camera *create_camera(vec3 position);

@@ -42,6 +42,9 @@ Camera *create_camera(vec3 position)
     glm_vec3_add(c->position, c->front, target);
     glm_lookat(c->position, target, c->up, c->view);
 
+    glm_mat4_identity(c->projection);
+    glm_perspective(glm_rad(c->fov), engine.screen_width / engine.screen_height, 0.1f, 100.0f, c->projection);
+    c->update_zoom = false;
     c->ons = true;
     return c;
 }
@@ -88,37 +91,38 @@ void update_camera(Camera *camera, GLFWwindow *w)
     }
     
     // Mouse management
-    if (engine.is_mouse_captured) {
-        double x_position, y_position;
-        glfwGetCursorPos(w, &x_position, &y_position);
-        
-        if (camera->ons) {
-            camera->last_mouse_x = (float)x_position;
-            camera->last_mouse_y = (float)y_position;
-            camera->ons = false;
-            return;
+    float x_offset = ((float)engine.mouse.x - camera->last_mouse_x) * camera->sensitivity;
+    float y_offset = (camera->last_mouse_y - (float)engine.mouse.y) * camera->sensitivity;
+    camera->last_mouse_x = (float)engine.mouse.x;
+    camera->last_mouse_y = (float)engine.mouse.y;
+
+    camera->yaw += x_offset;
+    camera->pitch += y_offset;
+
+    // Constrain pitch
+    if (camera->pitch > 89.0f) camera->pitch = 89.0f;
+    if (camera->pitch < -89.0f) camera->pitch = -89.0f;
+
+    // Calculate the new front vector
+    camera->front[0] = cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
+    camera->front[1] = sinf(glm_rad(camera->pitch));
+    camera->front[2] = sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
+    glm_normalize(camera->front);
+
+    // Zoom handling
+    if (camera->update_zoom) {
+        camera->fov -= engine.mouse.scroll_y;
+        if (camera->fov < 1.0f) {
+            camera->fov = 1.0f;
         }
-
-        float x_offset = ((float)x_position - camera->last_mouse_x) * camera->sensitivity;
-        float y_offset = (camera->last_mouse_y - (float)y_position) * camera->sensitivity;
-        camera->last_mouse_x = (float)x_position;
-        camera->last_mouse_y = (float)y_position;
-
-        camera->yaw += x_offset;
-        camera->pitch += y_offset;
-
-        // Constrain pitch
-        if (camera->pitch > 89.0f) camera->pitch = 89.0f;
-        if (camera->pitch < -89.0f) camera->pitch = -89.0f;
-
-        // Calculate the new front vector
-        camera->front[0] = cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
-        camera->front[1] = sinf(glm_rad(camera->pitch));
-        camera->front[2] = sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
-        glm_normalize(camera->front);
-
-        // Zoom handling
+        if (camera->fov > 45.0f){
+            camera->fov = CAMERA_FOV;
+        }
+        glm_perspective(glm_rad(camera->fov), engine.screen_width / engine.screen_height, 0.1f, 100.0f, camera->projection);
+        camera->update_zoom = false;
+        engine.update_prospective = true;
     }
+
 
     // Calculate matrix view
     vec3 target;

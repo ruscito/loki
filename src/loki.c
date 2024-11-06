@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+EngineState engine;
+
+
+
 // Vertex shader
 const char* vertex_shader_src = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -45,9 +49,6 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 
-// Add this to your window state or global variables
-bool mouse_captured = false;
-
 // Add this mouse button callback function
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) 
 {
@@ -55,7 +56,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         if (action == GLFW_PRESS) {
             // Capture mouse when clicking in window
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            mouse_captured = true;
+            engine.is_mouse_captured = true;
         }
     }
 }
@@ -67,7 +68,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         // Release mouse capture when pressing ESC
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         glfwSetWindowShouldClose(window, true);  
-        mouse_captured = false;
+        engine.is_mouse_captured = false;
     }
 }
 
@@ -83,6 +84,8 @@ int main()
 {
     // Initialize GLFW
     log_init();
+    engine.is_mouse_captured = false;
+
     if (!glfwInit()) {
         FATAL("Failed to initialize GLFW\n");
         return -1;

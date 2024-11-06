@@ -51,6 +51,7 @@ typedef struct {
     float last_mouse_x;
     float last_mouse_y;
     mat4 view;
+    mat4 projection;
     bool ons;
 } Camera;
 

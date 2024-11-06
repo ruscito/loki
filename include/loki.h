@@ -45,5 +45,9 @@ typedef struct {
     // float occlusion;
 } Vertex;
 
+typedef struct {
+    bool is_mouse_captured;
+} EngineState;
+
 
 #endif // _loki_H_

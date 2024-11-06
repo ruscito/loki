@@ -1,8 +1,10 @@
 #include "camera.h"
+#include "loki.h"
 #include "tools/log.h"
 #include <stdlib.h>
 
 const float MAX_PITCH = 89;
+extern EngineState engine; 
 
 Camera *create_camera(vec3 position) 
 {
@@ -86,33 +88,37 @@ void update_camera(Camera *camera, GLFWwindow *w)
     }
     
     // Mouse management
-    double x_position, y_position;
-    glfwGetCursorPos(w, &x_position, &y_position);
-    
-    if (camera->ons) {
+    if (engine.is_mouse_captured) {
+        double x_position, y_position;
+        glfwGetCursorPos(w, &x_position, &y_position);
+        
+        if (camera->ons) {
+            camera->last_mouse_x = (float)x_position;
+            camera->last_mouse_y = (float)y_position;
+            camera->ons = false;
+            return;
+        }
+
+        float x_offset = ((float)x_position - camera->last_mouse_x) * camera->sensitivity;
+        float y_offset = (camera->last_mouse_y - (float)y_position) * camera->sensitivity;
         camera->last_mouse_x = (float)x_position;
         camera->last_mouse_y = (float)y_position;
-        camera->ons = false;
-        return;
+
+        camera->yaw += x_offset;
+        camera->pitch += y_offset;
+
+        // Constrain pitch
+        if (camera->pitch > 89.0f) camera->pitch = 89.0f;
+        if (camera->pitch < -89.0f) camera->pitch = -89.0f;
+
+        // Calculate the new front vector
+        camera->front[0] = cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
+        camera->front[1] = sinf(glm_rad(camera->pitch));
+        camera->front[2] = sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
+        glm_normalize(camera->front);
+
+        // Zoom handling
     }
-
-    float x_offset = ((float)x_position - camera->last_mouse_x) * camera->sensitivity;
-    float y_offset = (camera->last_mouse_y - (float)y_position) * camera->sensitivity;
-    camera->last_mouse_x = (float)x_position;
-    camera->last_mouse_y = (float)y_position;
-
-    camera->yaw += x_offset;
-    camera->pitch += y_offset;
-
-    // Constrain pitch
-    if (camera->pitch > 89.0f) camera->pitch = 89.0f;
-    if (camera->pitch < -89.0f) camera->pitch = -89.0f;
-
-    // Calculate the new front vector
-    camera->front[0] = cosf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
-    camera->front[1] = sinf(glm_rad(camera->pitch));
-    camera->front[2] = sinf(glm_rad(camera->yaw)) * cosf(glm_rad(camera->pitch));
-    glm_normalize(camera->front);
 
     // Calculate matrix view
     vec3 target;

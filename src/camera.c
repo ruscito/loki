@@ -5,6 +5,7 @@
 
 const float MAX_PITCH = 89;
 extern EngineState engine; 
+extern Mouse mouse;
 
 Camera *create_camera(vec3 position) 
 {
@@ -91,10 +92,16 @@ void update_camera(Camera *camera, GLFWwindow *w)
     }
     
     // Mouse management
-    float x_offset = ((float)engine.mouse.x - camera->last_mouse_x) * camera->sensitivity;
-    float y_offset = (camera->last_mouse_y - (float)engine.mouse.y) * camera->sensitivity;
-    camera->last_mouse_x = (float)engine.mouse.x;
-    camera->last_mouse_y = (float)engine.mouse.y;
+    if (camera->ons) {
+        camera->last_mouse_x = mouse.x;
+        camera->last_mouse_y = mouse.y;
+        camera->ons = false;
+        return;
+    }
+    float x_offset = ((float)mouse.x - camera->last_mouse_x) * camera->sensitivity;
+    float y_offset = (camera->last_mouse_y - (float)mouse.y) * camera->sensitivity;
+    camera->last_mouse_x = (float)mouse.x;
+    camera->last_mouse_y = (float)mouse.y;
 
     camera->yaw += x_offset;
     camera->pitch += y_offset;
@@ -111,7 +118,7 @@ void update_camera(Camera *camera, GLFWwindow *w)
 
     // Zoom handling
     if (camera->update_zoom) {
-        camera->fov -= engine.mouse.scroll_y;
+        camera->fov -= mouse.scroll_y;
         if (camera->fov < 1.0f) {
             camera->fov = 1.0f;
         }

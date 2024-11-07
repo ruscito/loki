@@ -54,8 +54,6 @@ typedef struct {
 
 typedef struct {
     bool is_mouse_captured;
-    Mouse mouse;
-    Camera *camera;
     bool update_prospective;
     float screen_width;
     float screen_height;

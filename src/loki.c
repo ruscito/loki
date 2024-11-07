@@ -10,7 +10,8 @@
 #include <stdlib.h>
 
 EngineState engine;
-
+Mouse mouse;
+Camera *camera;
 
 
 // Vertex shader
@@ -48,24 +49,22 @@ const unsigned int SCR_HEIGHT = 600;
 void cursor_position_callback(GLFWwindow* window, double x_position, double y_position)
 {
     if (engine.is_mouse_captured) {
-        engine.mouse.x = x_position;
-        engine.mouse.y = y_position;
+        mouse.x = x_position;
+        mouse.y = y_position;
     }
 }
 
 // Mouse button callback function
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) 
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        if (action == GLFW_PRESS) {
-            // Capture mouse when clicking in window
+    if (button == GLFW_MOUSE_BUTTON_LEFT  && action == GLFW_PRESS) {
+        // Capture mouse when clicking in window
+        if ( ! engine.is_mouse_captured ) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetCursorPos(window, 0.0f, 0.0f);
+            mouse.x = 0.0f;
+            mouse.y = 0.0f;
             engine.is_mouse_captured = true;
-            if (engine.camera->ons) {
-                glfwSetCursorPos(window, 0.0f, 0.0f);
-                engine.camera->ons = false;
-                return;
-            }
         }
     }
 }
@@ -74,9 +73,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void mouse_scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
 {
     if (engine.is_mouse_captured) {
-        engine.mouse.scroll_x = x_offset;
-        engine.mouse.scroll_y = y_offset;
-        engine.camera->update_zoom = true;
+        mouse.scroll_x = x_offset;
+        mouse.scroll_y = y_offset;
+        camera->update_zoom = true;
     }   
 }
 
@@ -104,14 +103,14 @@ int main()
     // initialize engine state
     log_init();
     engine.is_mouse_captured = false;
-    engine.mouse.x = 0.0f ;
-    engine.mouse.y = 0.0f ;
-    engine.mouse.scroll_x = 0.0f ;
-    engine.mouse.scroll_y = 0.0f ;
+    mouse.x = 0.0f ;
+    mouse.y = 0.0f ;
+    mouse.scroll_x = 0.0f ;
+    mouse.scroll_y = 0.0f ;
     engine.screen_height = SCR_HEIGHT;
     engine.screen_width = SCR_WIDTH;
     // Camera
-    if ( (engine.camera = create_camera(NULL)) == NULL) {
+    if ( (camera = create_camera(NULL)) == NULL) {
         FATAL("Failed to create the default camera");
         return 0;
     };
@@ -241,7 +240,7 @@ int main()
     glm_mat4_identity(model);
 
     glm_rotate(model, glm_rad(-55.0), (vec3){1.0f, 0.0f, 0.0f});
-    glm_perspective(glm_rad(engine.camera->fov), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, engine.camera->projection);
+    glm_perspective(glm_rad(camera->fov), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f, camera->projection);
 
     // Use our shader program
     glUseProgram(shader_program);
@@ -254,12 +253,12 @@ int main()
     // send view matrix
     unsigned int view_loc = glGetUniformLocation(shader_program, "view");
     DEBUG("View location  = %d\n", view_loc);
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, engine.camera->view[0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, camera->view[0]);
 
     // send projection matrix
     unsigned int projection_loc = glGetUniformLocation(shader_program, "projection");
     DEBUG("Projection location  = %d\n", projection_loc);
-    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, engine.camera->projection[0]);
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, camera->projection[0]);
 
     // Set back-face culling
     // glEnable(GL_CULL_FACE);
@@ -283,13 +282,12 @@ int main()
 
         // Use our shader program
         glUseProgram(shader_program);
-        update_camera(engine.camera , window);
+        update_camera(camera , window);
         if (engine.update_prospective) {
-            glUniformMatrix4fv(projection_loc, 1, GL_FALSE, engine.camera->projection[0]);
+            glUniformMatrix4fv(projection_loc, 1, GL_FALSE, camera->projection[0]);
             engine.update_prospective = false;
-            DEBUG("Updated prospective\n");
         }
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, engine.camera->view[0]);
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, camera->view[0]);
 
         // Bind texture
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -303,8 +301,10 @@ int main()
 
         // Poll for and process events
         glfwPollEvents();
+
+        DEBUG("Mouse position x = %f, y = %f\n", mouse.x, mouse.y);
     }
-    free(engine.camera);
+    free(camera);
 
     // Clean up
 CLEAN_UP:

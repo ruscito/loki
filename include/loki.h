@@ -53,11 +53,28 @@ typedef struct {
 } Vertex;
 
 typedef struct {
+    double last_frame_time;
+    double delta_time;
+    double fixed_time_step;
+    double accumulator;
+    
+    // FPS calculation
+    double fps_update_time;
+    int frame_count;
+    double fps;
+} EngineTime;
+
+typedef struct {
     bool is_mouse_captured;
     bool update_prospective;
     float screen_width;
     float screen_height;
+    EngineTime time;
 } EngineState;
 
+
+void init_engine_time(EngineTime* time);
+void update_delta_time(EngineTime* time);
+bool should_fixed_update(EngineTime* time);
 
 #endif // _loki_H_

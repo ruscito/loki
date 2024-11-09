@@ -98,6 +98,37 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+
+void update(EngineState* state)
+{
+    // Regular game updates using delta time
+    // Example: Input processing
+    // if (glfwGetKey(state->window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    //     state->player_velocity = 100.0f; // units per second
+    // }
+    // else if (glfwGetKey(state->window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    //     state->player_velocity = -100.0f;
+    // }
+    // else {
+    //     state->player_velocity = 0.0f;
+    // }
+}
+
+void fixed_update(EngineState* state)
+{
+    // Physics and other time-critical updates
+    // This runs at a fixed time step (60 times per second)
+    
+    // Example: Basic physics update
+    // state->player_x += state->player_velocity * state->time.fixed_time_step;
+}
+
+void render(EngineState* state)
+{
+
+}
+
+
 int main() 
 {
     // initialize engine state
@@ -109,6 +140,7 @@ int main()
     mouse.scroll_y = 0.0f ;
     engine.screen_height = SCR_HEIGHT;
     engine.screen_width = SCR_WIDTH;
+    init_engine_time(&engine.time);
     // Camera
     if ( (camera = create_camera(NULL)) == NULL) {
         FATAL("Failed to create the default camera");
@@ -276,9 +308,27 @@ int main()
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        
+        // Poll for and process events
+        glfwPollEvents();
+
+        // Update timing
+        update_delta_time(&engine.time);
 
         // Clear the color buffer and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        // Fixed update step for physics
+        while (should_fixed_update(&engine.time)) {
+            fixed_update(&engine);
+        }
+
+        // Variable update step
+        update(&engine);
+        
+        // Render
+        render(&engine);
 
         // Use our shader program
         glUseProgram(shader_program);
@@ -299,10 +349,8 @@ int main()
         // Swap front and back buffers
         glfwSwapBuffers(window);
 
-        // Poll for and process events
-        glfwPollEvents();
 
-        DEBUG("Mouse position x = %f, y = %f\n", mouse.x, mouse.y);
+        DEBUG("FPS: %.2f\n", engine.time.fps);
     }
     free(camera);
 

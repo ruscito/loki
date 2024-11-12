@@ -112,6 +112,7 @@ void update(EngineState* state)
     // else {
     //     state->player_velocity = 0.0f;
     // }
+    // DEBUG("FPS update: %.2f\n", state->time.fps);
 }
 
 void fixed_update(EngineState* state)
@@ -121,11 +122,12 @@ void fixed_update(EngineState* state)
     
     // Example: Basic physics update
     // state->player_x += state->player_velocity * state->time.fixed_time_step;
+    DEBUG("FPS fixed update: %.2f\n", state->time.fixed_fps);
 }
 
 void render(EngineState* state)
 {
-
+    // DEBUG("FPS render update: %.2f\n", state->time.fps);
 }
 
 
@@ -350,7 +352,7 @@ int main()
         glfwSwapBuffers(window);
 
 
-        DEBUG("FPS: %.2f\n", engine.time.fps);
+        
     }
     free(camera);
 

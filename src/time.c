@@ -15,6 +15,7 @@ void init_engine_time(EngineTime* time)
     time->fps_update_time = time->last_frame_time;
     time->frame_count = 0;
     time->fps = 0.0;
+    time->fixed_fps = 0.0;
 }
 
 void update_delta_time(EngineTime* time) 
@@ -36,6 +37,7 @@ void update_delta_time(EngineTime* time)
         time->fps = (double)time->frame_count / (current_time - time->fps_update_time);
         time->fps_update_time = current_time;
         time->frame_count = 0;
+
     }
 }
 
@@ -43,6 +45,7 @@ bool should_fixed_update(EngineTime* time)
 {
     if (time->accumulator >= time->fixed_time_step) {
         time->accumulator -= time->fixed_time_step;
+        time->fixed_fps =  (double)time->frame_count / (glfwGetTime() - time->fixed_time_step);
         return true;
     }
     return false;

@@ -62,6 +62,7 @@ typedef struct {
     double fps_update_time;
     int frame_count;
     double fps;
+    double fixed_fps;
 } EngineTime;
 
 typedef struct {

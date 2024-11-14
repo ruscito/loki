@@ -2,67 +2,99 @@
 ifeq ($(OS),Windows_NT)
     # MSYS2 Windows settings
     CC = gcc
-    CFLAGS = -g -Wall -Wextra -std=c11 \
-             -Iinclude \
-             -I./extern/cglm/include \
-             -I./extern \
-             -I/mingw64/include
+    CFLAGS = -g -Wall -Wextra -std=c11
+    INCLUDES = -Iinclude \
+               -I./extern/cglm/include \
+               -I./extern \
+               -I./extern/glad/include \
+               -I/mingw64/include
     LDFLAGS = $(shell pkg-config --libs glfw3) -lopengl32 -lgdi32
     TARGET = $(BIN_DIR)/loki.exe
+    RM = rm -rf
 else
-    # macOS settings
-    CC = clang
-    CFLAGS = -g -Wall -Wextra -std=c11 \
-             -Iinclude \
-             -I./extern/cglm/include \
-             -I./extern \
-             -I/usr/local/include
-    LDFLAGS = -L/usr/local/lib -lglfw -framework OpenGL
-    TARGET = $(BIN_DIR)/loki
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+        # macOS settings
+        CC = clang
+        CFLAGS = -g -Wall -Wextra -std=c11
+        INCLUDES = -Iinclude \
+                  -I./extern/cglm/include \
+                  -I./extern \
+                  -I./extern/glad/include \
+                  -I/usr/local/include
+        LDFLAGS = -L/usr/local/lib -lglfw -framework OpenGL -ldl
+        TARGET = $(BIN_DIR)/loki
+        RM = rm -rf
+    else
+        # Linux settings
+        CC = gcc
+        CFLAGS = -g -Wall -Wextra -std=c11
+        INCLUDES = -Iinclude \
+                  -I./extern/cglm/include \
+                  -I./extern \
+                  -I./extern/glad/include \
+                  -I/usr/include
+        LDFLAGS = -lglfw -lGL -ldl -lm
+        TARGET = $(BIN_DIR)/loki
+        RM = rm -rf
+    endif
 endif
 
 # Directories
 SRC_DIR = src
 OBJ_DIR = obj
-OBJT_DIR = obj/tools
 BIN_DIR = bin
+RES_DIR = res
 
-# Create directories if they don't exist
-$(shell mkdir -p $(OBJ_DIR) $(OBJT_DIR) $(BIN_DIR))
+# Create directories
+$(shell mkdir -p $(OBJ_DIR) $(BIN_DIR))
 
-# Automatically find all C source files, including those in subdirectories
-SRCS = $(shell find $(SRC_DIR) -name '*.c') # extern/cglm/src/*.c
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
+# Source files and objects
+SRCS := $(shell find $(SRC_DIR) -name '*.c')
+GLAD_SRC := ./extern/glad/src/glad.c
+OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+GLAD_OBJ := $(OBJ_DIR)/glad.o
 
-.PHONY: all clean
+# Declare phony targets
+.PHONY: all clean run build-run copy-res
 
-# All target
-all: clean $(BIN_DIR)/loki
-# all: $(BIN_DIR)/loki
+# Default target
+all: $(TARGET)
 
 # Linking
-$(BIN_DIR)/loki: $(OBJS)
-	@echo "Linking $@ with objects: $^"
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(TARGET): $(OBJS) $(GLAD_OBJ)
+	@echo "Linking $@ ..."
+	@$(CC) $^ -o $@ $(LDFLAGS)
+	@echo "Build complete!"
 
-# Compiling object files
+# Compilation pattern rule for project files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(dir $@)  # Create the directory for the object file
-	@echo "Compiling $< to $@"
-	$(CC) $(CFLAGS) -c $< -o $@
+	@mkdir -p $(dir $@)
+	@echo "Compiling $< ..."
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# Clean target
+# Compilation rule for GLAD
+$(GLAD_OBJ): $(GLAD_SRC)
+	@echo "Compiling GLAD..."
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Clean build files
 clean:
-	rm -rf $(OBJ_DIR)/*.o $(OBJT_DIR)/*.o $(TARGET)
+	@echo "Cleaning build files..."
+	@$(RM) $(OBJ_DIR) $(TARGET)
+	@echo "Clean complete!"
 
-# Just run
-run:
-	./$(TARGET)
+# Run the application
+run: $(TARGET)
+	@echo "Running $(TARGET)..."
+	@./$(TARGET)
 
-# Build and run without cleaning
+# Build and run
 build-run: $(TARGET) run
 
-# Copy resource
+# Copy resources
 copy-res:
-	rm -rf ./bin/res
-	cp -r ./res ./bin/res
+	@echo "Copying resources..."
+	@$(RM) $(BIN_DIR)/$(RES_DIR)
+	@cp -r ./$(RES_DIR) $(BIN_DIR)/$(RES_DIR)
+	@echo "Resources copied!"

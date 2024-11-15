@@ -1,4 +1,4 @@
-#include "tools/res.h"
+#include "res.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,4 @@
-#include "tools/log.h"
+#include "log.h"
 
 #include <time.h>
 #include <stdarg.h>

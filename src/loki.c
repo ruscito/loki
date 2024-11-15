@@ -1,10 +1,8 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include "loki.h"
-#include "tools/log.h"
-#include "tools/res.h"
-#include "shaders.h"
+#include "gfx/gfx.h"
+#include "gfx/shaders.h"
+#include "util/log.h"
+#include "util/res.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,7 +140,7 @@ int main()
     mouse.scroll_y = 0.0f ;
     engine.screen_height = SCR_HEIGHT;
     engine.screen_width = SCR_WIDTH;
-    init_engine_time(&engine.time);
+    init_engine_time(&engine.time, glfwGetTime());
     // Camera
     if ( (camera = create_camera(NULL)) == NULL) {
         FATAL("Failed to create the default camera");
@@ -315,14 +313,14 @@ int main()
         glfwPollEvents();
 
         // Update timing
-        update_delta_time(&engine.time);
+        update_delta_time(&engine.time, glfwGetTime());
 
         // Clear the color buffer and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
         // Fixed update step for physics
-        while (should_fixed_update(&engine.time)) {
+        while (should_fixed_update(&engine.time, glfwGetTime())) {
             fixed_update(&engine);
         }
 

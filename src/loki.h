@@ -13,8 +13,8 @@
 #define CGLM_ALL_UNALIGNED
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
-
-#include "camera.h"
+#include "util/time.h"
+#include "gfx/camera.h"
 
 #define PI 3.14159265359f
 #define DEG2RAD(X) ((X) * (PI / 180.0f))
@@ -52,18 +52,7 @@ typedef struct {
     // float occlusion;
 } Vertex;
 
-typedef struct {
-    double last_frame_time;
-    double delta_time;
-    double fixed_time_step;
-    double accumulator;
-    
-    // FPS calculation
-    double fps_update_time;
-    int frame_count;
-    double fps;
-    double fixed_fps;
-} EngineTime;
+
 
 typedef struct {
     bool is_mouse_captured;
@@ -74,8 +63,6 @@ typedef struct {
 } EngineState;
 
 
-void init_engine_time(EngineTime* time);
-void update_delta_time(EngineTime* time);
-bool should_fixed_update(EngineTime* time);
+
 
 #endif // _loki_H_

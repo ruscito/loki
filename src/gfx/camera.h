@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <cglm/cglm.h>
-#include <GLFW/glfw3.h>
+#include "gfx.h"
 
 
 // Default initial setup

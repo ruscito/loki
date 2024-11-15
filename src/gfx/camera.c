@@ -1,6 +1,6 @@
 #include "camera.h"
-#include "loki.h"
-#include "tools/log.h"
+#include "../loki.h"
+#include "../util/log.h"
 #include <stdlib.h>
 
 const float MAX_PITCH = 89;
